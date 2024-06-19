@@ -1,7 +1,5 @@
-import * as App from '@wails/go/bridge/App'
+import { App } from '@wails/guiforcores/bridge'
 import type { TrayContent } from '@/constant'
-
-export * from '@wails/runtime/runtime'
 
 export const RestartApp = App.RestartApp
 

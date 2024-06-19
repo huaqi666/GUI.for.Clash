@@ -1,4 +1,4 @@
-import * as App from '@wails/go/bridge/App'
+import { App } from '@wails/guiforcores/bridge'
 
 export const AddScheduledTask = async (cron: string, event: string) => {
   const { flag, data } = await App.AddScheduledTask(cron, event)

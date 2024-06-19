@@ -1,7 +1,7 @@
-import * as App from '@wails/go/bridge/App'
 import { GetSystemProxy } from '@/utils/helper'
 import { sampleID, getUserAgent } from '@/utils'
-import { EventsOn, EventsOff } from '@wails/runtime/runtime'
+import { Events } from '@wailsio/runtime'
+import { App } from '@wails/guiforcores/bridge'
 
 type RequestType = {
   method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'HEAD' | 'PATCH'
@@ -75,7 +75,7 @@ const requestWithProgress = (method: 'Download' | 'Upload') => {
 
     const event = sampleID()
 
-    EventsOn(event, progress)
+    Events.On(event, progress)
 
     const {
       flag,
@@ -84,7 +84,7 @@ const requestWithProgress = (method: 'Download' | 'Upload') => {
       body
     } = await App[method](url, path, _headers, event, _options)
 
-    EventsOff(event)
+    Events.Off(event)
 
     if (!flag) throw body
 

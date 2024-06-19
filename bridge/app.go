@@ -1,19 +1,19 @@
 package bridge
 
 import (
+	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/klauspost/cpuid/v2"
 	"gopkg.in/yaml.v3"
 )
 
-// NewApp creates a new App application struct
-func NewApp() *App {
-	return &App{}
-}
+type App struct{}
 
 var Env = &EnvResult{
 	BasePath:    "",
@@ -61,7 +61,34 @@ func (a *App) RestartApp() FlagResult {
 		return FlagResult{false, err.Error()}
 	}
 
-	a.ExitApp()
+	// s.ExitApp()
 
 	return FlagResult{true, "Success"}
+}
+
+func (a *App) GetEnv() EnvResult {
+	return EnvResult{
+		AppName:  Env.AppName,
+		BasePath: Env.BasePath,
+		OS:       Env.OS,
+		ARCH:     Env.ARCH,
+		X64Level: Env.X64Level,
+	}
+}
+
+func (a *App) GetInterfaces() FlagResult {
+	log.Printf("GetInterfaces")
+
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return FlagResult{false, err.Error()}
+	}
+
+	var interfaceNames []string
+
+	for _, inter := range interfaces {
+		interfaceNames = append(interfaceNames, inter.Name)
+	}
+
+	return FlagResult{true, strings.Join(interfaceNames, "|")}
 }

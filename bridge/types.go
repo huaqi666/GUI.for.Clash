@@ -1,14 +1,8 @@
 package bridge
 
 import (
-	"context"
 	"net/http"
 )
-
-// App struct
-type App struct {
-	Ctx context.Context
-}
 
 type EnvResult struct {
 	FromTaskSch bool   `json:"-"`

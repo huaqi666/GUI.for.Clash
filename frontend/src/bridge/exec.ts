@@ -1,6 +1,6 @@
 import { sampleID } from '@/utils'
-import * as App from '@wails/go/bridge/App'
-import { EventsOn, EventsOff } from '@wails/runtime/runtime'
+import { App } from '@wails/guiforcores/bridge'
+import { Events } from '@wailsio/runtime'
 
 type ExecOptions = {
   convert: boolean
@@ -39,14 +39,14 @@ export const ExecBackground = async (
     throw data
   }
 
-  EventsOn(outEvent, (out: string) => {
+  Events.On(outEvent, (out: string) => {
     onOut && onOut(out)
   })
 
-  EventsOn(endEvent, () => {
+  Events.On(endEvent, () => {
     onEnd && onEnd()
-    EventsOff(outEvent)
-    EventsOff(endEvent)
+    Events.Off(outEvent)
+    Events.Off(endEvent)
   })
 
   return Number(data)

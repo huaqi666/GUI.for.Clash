@@ -1,66 +1,64 @@
 package main
 
 import (
-	"context"
 	"embed"
 	"guiforcores/bridge"
+	"log"
 
-	"github.com/google/uuid"
-	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/logger"
-	"github.com/wailsapp/wails/v2/pkg/menu"
-	"github.com/wailsapp/wails/v2/pkg/menu/keys"
-	"github.com/wailsapp/wails/v2/pkg/options"
-	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
-	"github.com/wailsapp/wails/v2/pkg/options/linux"
-	"github.com/wailsapp/wails/v2/pkg/options/mac"
-	"github.com/wailsapp/wails/v2/pkg/options/windows"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-//go:embed all:frontend/dist
-var assets embed.FS
+// Wails uses Go's `embed` package to embed the frontend files into the binary.
+// Any files in the frontend/dist folder will be embedded into the binary and
+// made available to the frontend.
+// See https://pkg.go.dev/embed for more information.
 
-//go:embed frontend/dist/favicon.ico
-var icon []byte
+//go:embed frontend/dist
+var assets embed.FS
 
 var isStartup = true
 
 func main() {
 	bridge.InitBridge()
 
-	// Create an instance of the app structure
-	app := bridge.NewApp()
+	// Create a new Wails application by providing the necessary options.
+	// Variables 'Name' and 'Description' are for application metadata.
+	// 'Assets' configures the asset server with the 'FS' variable pointing to the frontend files.
+	// 'Bind' is a list of Go struct instances. The frontend has access to the methods of these instances.
+	// 'Mac' options tailor the application when running an macOS.
+	app := application.New(application.Options{
+		Name:        "GUI.for.Cores",
+		Description: "A GUI program developed by vue3 + wails3.",
+		Services: []application.Service{
+			application.NewService(&bridge.App{}),
+		},
+		Assets: application.AssetOptions{
+			Handler: application.AssetFileServerFS(assets),
+		},
+		Mac: application.MacOptions{
+			ApplicationShouldTerminateAfterLastWindowClosed: true,
+		},
+	})
 
-	AppMenu := menu.NewMenu()
+	systemTray := app.NewSystemTray()
+	b, _ := assets.ReadFile("frontend/dist/wails.png")
+	systemTray.SetTemplateIcon(b)
 
-	if bridge.Env.OS == "darwin" {
-		appMenu := AppMenu.AddSubmenu("App")
-		appMenu.AddText("Show", keys.CmdOrCtrl("s"), func(_ *menu.CallbackData) {
-			runtime.WindowShow(app.Ctx)
-		})
-		appMenu.AddText("Hide", keys.CmdOrCtrl("h"), func(_ *menu.CallbackData) {
-			runtime.WindowHide(app.Ctx)
-		})
-		appMenu.AddSeparator()
-		appMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-			runtime.EventsEmit(app.Ctx, "quitApp")
-		})
+	menu := app.NewMenu()
+	menu.AddSubmenu("Test")
 
-		// on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
-		AppMenu.Append(menu.EditMenu())
-	}
+	systemTray.SetMenu(menu)
+	systemTray.OnClick(func() {
+		println("test")
+	})
 
-	// Create application with options
-	err := wails.Run(&options.App{
+	// Create a new window with the necessary options.
+	// 'Title' is the title of the window.
+	// 'Mac' options tailor the window when running on macOS.
+	// 'BackgroundColour' is the background colour of the window.
+	// 'URL' is the URL that will be loaded into the webview.
+	app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
 		Title: bridge.Env.AppName,
-		Menu:  AppMenu,
-		Width: func() int {
-			if bridge.Config.Width != 0 {
-				return bridge.Config.Width
-			}
-			return 800
-		}(),
 		Height: func() int {
 			if bridge.Config.Height != 0 {
 				return bridge.Config.Height
@@ -74,80 +72,82 @@ func main() {
 		MinHeight:     400,
 		Frameless:     bridge.Env.OS == "windows",
 		DisableResize: false,
-		StartHidden: func() bool {
-			if bridge.Env.FromTaskSch {
-				return bridge.Config.WindowStartState == 2
+		// StartHidden: func() bool {
+		// 	if bridge.Env.FromTaskSch {
+		// 		return bridge.Config.WindowStartState == 2
+		// 	}
+		// 	return false
+		// }(),
+		// WindowStartState: func() options.WindowStartState {
+		// 	if bridge.Env.FromTaskSch {
+		// 		return options.WindowStartState(bridge.Config.WindowStartState)
+		// 	}
+		// 	return 0
+		// }(),
+		// Windows: &windows.Options{
+		// 	WebviewIsTransparent: true,
+		// 	WindowIsTranslucent:  true,
+		// 	BackdropType:         windows.Acrylic,
+		// },
+		Width: func() int {
+			if bridge.Config.Width != 0 {
+				return bridge.Config.Width
 			}
-			return false
+			return 800
 		}(),
-		WindowStartState: func() options.WindowStartState {
-			if bridge.Env.FromTaskSch {
-				return options.WindowStartState(bridge.Config.WindowStartState)
-			}
-			return 0
-		}(),
-		Windows: &windows.Options{
-			WebviewIsTransparent: true,
-			WindowIsTranslucent:  true,
-			BackdropType:         windows.Acrylic,
+		Mac: application.MacWindow{
+			InvisibleTitleBarHeight: 50,
+			Backdrop:                application.MacBackdropTranslucent,
+			TitleBar:                application.MacTitleBarHiddenInset,
+			// About:
+			// About: &mac.AboutInfo{
+			// 	Title:   bridge.Env.AppName,
+			// 	Message: "© 2024 GUI.for.Cores",
+			// 	Icon:    icon,
+			// },
 		},
-		Mac: &mac.Options{
-			TitleBar:             mac.TitleBarHiddenInset(),
-			Appearance:           mac.DefaultAppearance,
-			WebviewIsTransparent: true,
-			WindowIsTranslucent:  true,
-			About: &mac.AboutInfo{
-				Title:   bridge.Env.AppName,
-				Message: "© 2024 GUI.for.Cores",
-				Icon:    icon,
-			},
-		},
-		Linux: &linux.Options{
-			Icon:                icon,
-			WindowIsTranslucent: false,
-		},
-		AssetServer: &assetserver.Options{
-			Assets: assets,
-		},
-		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 1},
-		SingleInstanceLock: &options.SingleInstanceLock{
-			UniqueId: func() string {
-				if bridge.Config.MultipleInstance {
-					return uuid.New().String()
-				}
-				return bridge.Env.AppName
-			}(),
-			OnSecondInstanceLaunch: func(data options.SecondInstanceData) {
-				runtime.Show(app.Ctx)
-				runtime.EventsEmit(app.Ctx, "launchArgs", data.Args)
-			},
-		},
-		OnStartup: func(ctx context.Context) {
-			runtime.LogSetLogLevel(ctx, logger.INFO)
-			app.Ctx = ctx
-			bridge.InitTray(app, icon, assets)
-			bridge.InitScheduledTasks()
-			bridge.InitNotification(assets)
-		},
-		OnDomReady: func(ctx context.Context) {
-			if isStartup {
-				runtime.EventsEmit(ctx, "onStartup")
-				isStartup = false
-			}
-		},
-		OnBeforeClose: func(ctx context.Context) (prevent bool) {
-			runtime.EventsEmit(ctx, "beforeClose")
-			return true
-		},
-		Bind: []interface{}{
-			app,
-		},
-		Debug: options.Debug{
-			OpenInspectorOnStartup: true,
-		},
+		BackgroundColour: application.NewRGBA(255, 255, 255, 1),
+		// Linux: &linux.Options{
+		// 	Icon:                icon,
+		// 	WindowIsTranslucent: false,
+		// },
+		// SingleInstanceLock: &options.SingleInstanceLock{
+		// 	UniqueId: func() string {
+		// 		if bridge.Config.MultipleInstance {
+		// 			return uuid.New().String()
+		// 		}
+		// 		return bridge.Env.AppName
+		// 	}(),
+		// 	OnSecondInstanceLaunch: func(data options.SecondInstanceData) {
+		// 		runtime.Show(app.Ctx)
+		// 		runtime.EventsEmit(app.Ctx, "launchArgs", data.Args)
+		// 	},
+		// },
+		// OnStartup: func(ctx context.Context) {
+		// 	runtime.LogSetLogLevel(ctx, logger.INFO)
+		// 	app.Ctx = ctx
+		// 	bridge.InitTray(app, icon, assets)
+		// 	bridge.InitScheduledTasks()
+		// 	bridge.InitNotification(assets)
+		// },
+		// OnDomReady: func(ctx context.Context) {
+		// 	if isStartup {
+		// 		runtime.EventsEmit(ctx, "onStartup")
+		// 		isStartup = false
+		// 	}
+		// },
+		// OnBeforeClose: func(ctx context.Context) (prevent bool) {
+		// 	runtime.EventsEmit(ctx, "beforeClose")
+		// 	return true
+		// },
+		URL: "/",
 	})
 
+	// Run the application. This blocks until the application has been exited.
+	err := app.Run()
+
+	// If an error occurred while running the application, log it and exit.
 	if err != nil {
-		println("Error:", err.Error())
+		log.Fatal(err)
 	}
 }

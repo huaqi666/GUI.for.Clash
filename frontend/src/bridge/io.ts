@@ -1,4 +1,4 @@
-import * as App from '@wails/go/bridge/App'
+import { App } from '@wails/guiforcores/bridge'
 
 type IOOptions = {
   Mode?: 'Binary' | 'Text'

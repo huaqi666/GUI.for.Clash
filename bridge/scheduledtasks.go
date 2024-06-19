@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/robfig/cron/v3"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 var tasks cron.Cron
@@ -18,7 +17,7 @@ func InitScheduledTasks() {
 func (a *App) AddScheduledTask(spec string, event string) FlagResult {
 	log.Printf("AddScheduledTask: %s %s", spec, event)
 	id, err := tasks.AddFunc(spec, func() {
-		runtime.EventsEmit(a.Ctx, event)
+		// runtime.EventsEmit(a.Ctx, event)
 	})
 	if err != nil {
 		return FlagResult{false, err.Error()}

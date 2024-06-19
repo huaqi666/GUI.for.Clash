@@ -1,5 +1,6 @@
-import * as App from '@wails/go/bridge/App'
-import { EventsOn, EventsEmit, EventsOff } from '@wails/runtime/runtime'
+import { App } from '@wails/guiforcores/bridge'
+
+import { Events } from '@wailsio/runtime'
 
 type RequestType = {
   id: string
@@ -24,7 +25,7 @@ export const StartServer = async (address: string, id: string, handler: HttpServ
     throw data
   }
 
-  EventsOn(id, async (...args) => {
+  Events.On(id, async (...args) => {
     const [id, method, url, headers, body] = args
     try {
       await handler(
@@ -37,13 +38,13 @@ export const StartServer = async (address: string, id: string, handler: HttpServ
         },
         {
           end: (status, headers, body, options = { mode: 'Text' }) => {
-            EventsEmit(id, status, JSON.stringify(headers), body, JSON.stringify(options))
+            Events.Emit(id, status, JSON.stringify(headers), body, JSON.stringify(options))
           }
         }
       )
     } catch (err: any) {
       console.log('Server handler err:', err, id)
-      EventsEmit(
+      Events.Emit(
         id,
         500,
         JSON.stringify({ 'Content-Type': 'text/plain; charset=utf-8' }),
@@ -60,7 +61,7 @@ export const StopServer = async (serverID: string) => {
   if (!flag) {
     throw data
   }
-  EventsOff(serverID)
+  Events.Off(serverID)
   return data
 }
 

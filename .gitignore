@@ -1,4 +1,7 @@
 build/bin
 frontend/dist
+frontend/bindings
 
 .DS_Store
+
+.task
