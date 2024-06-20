@@ -25,7 +25,7 @@ export const StartServer = async (address: string, id: string, handler: HttpServ
     throw data
   }
 
-  Events.On(id, async (...args) => {
+  Events.On(id, async (...args: any[]) => {
     const [id, method, url, headers, body] = args
     try {
       await handler(
@@ -38,19 +38,29 @@ export const StartServer = async (address: string, id: string, handler: HttpServ
         },
         {
           end: (status, headers, body, options = { mode: 'Text' }) => {
-            Events.Emit(id, status, JSON.stringify(headers), body, JSON.stringify(options))
+            Events.Emit({
+              name: id,
+              data: {
+                status,
+                headers: JSON.stringify(headers),
+                body,
+                options: JSON.stringify(options)
+              }
+            })
           }
         }
       )
     } catch (err: any) {
       console.log('Server handler err:', err, id)
-      Events.Emit(
-        id,
-        500,
-        JSON.stringify({ 'Content-Type': 'text/plain; charset=utf-8' }),
-        err.message || err,
-        JSON.stringify({ Mode: 'Text' })
-      )
+      Events.Emit({
+        name: id,
+        data: {
+          status: 500,
+          headers: JSON.stringify({ 'Content-Type': 'text/plain; charset=utf-8' }),
+          body: err.message || err,
+          options: JSON.stringify({ Mode: 'Text' })
+        }
+      })
     }
   })
   return { close: () => StopServer(id) }

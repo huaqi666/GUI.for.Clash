@@ -3,16 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 
 import { APP_TITLE, APP_VERSION, debounce, exitApp } from '@/utils'
 import { type Menu, useAppSettingsStore, useKernelApiStore, useEnvStore } from '@/stores'
-import {
-  WindowSetAlwaysOnTop,
-  WindowHide,
-  WindowMinimise,
-  WindowSetSize,
-  WindowReloadApp,
-  WindowToggleMaximise,
-  WindowIsMaximised,
-  RestartApp
-} from '@/bridge'
+import { Window, RestartApp } from '@/bridge'
 
 const isPinned = ref(false)
 const isMaximised = ref(false)
@@ -23,25 +14,25 @@ const envStore = useEnvStore()
 
 const pinWindow = () => {
   isPinned.value = !isPinned.value
-  WindowSetAlwaysOnTop(isPinned.value)
+  Window.SetAlwaysOnTop(isPinned.value)
 }
 
 const closeWindow = async () => {
   if (appSettingsStore.app.exitOnClose) {
     exitApp()
   } else {
-    WindowHide()
+    Window.Hide()
   }
 }
 
 const menus: Menu[] = [
   {
     label: 'titlebar.resetSize',
-    handler: () => WindowSetSize(800, 540)
+    handler: () => Window.SetSize(800, 540)
   },
   {
     label: 'titlebar.reload',
-    handler: WindowReloadApp
+    handler: Window.Reload
   },
   {
     label: 'titlebar.restart',
@@ -54,7 +45,7 @@ const menus: Menu[] = [
 ]
 
 const onResize = debounce(async () => {
-  isMaximised.value = await WindowIsMaximised()
+  isMaximised.value = await Window.IsMaximised()
 }, 100)
 
 onMounted(() => window.addEventListener('resize', onResize))
@@ -64,7 +55,7 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
 <template>
   <div
     v-if="envStore.env.os === 'windows'"
-    @dblclick="WindowToggleMaximise"
+    @dblclick="Window.ToggleMaximise"
     class="titlebar"
     style="--wails-draggable: drag"
   >
@@ -83,10 +74,10 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
       <Button @click.stop="pinWindow" type="text">
         <Icon :icon="isPinned ? 'pinFill' : 'pin'" />
       </Button>
-      <Button @click.stop="WindowMinimise" type="text">
+      <Button @click.stop="Window.Minimise" type="text">
         <Icon icon="minimize" />
       </Button>
-      <Button @click.stop="WindowToggleMaximise" type="text">
+      <Button @click.stop="Window.ToggleMaximise" type="text">
         <Icon :icon="isMaximised ? 'maximize2' : 'maximize'" />
       </Button>
       <Button

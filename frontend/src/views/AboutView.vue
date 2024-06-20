@@ -7,12 +7,12 @@ import { useEnvStore } from '@/stores'
 import {
   Download,
   HttpGet,
-  BrowserOpenURL,
   Movefile,
   RestartApp,
   UnzipZIPFile,
   Makedir,
-  Removefile
+  Removefile,
+  Browser
 } from '@/bridge'
 import {
   APP_TITLE,
@@ -147,9 +147,9 @@ checkForUpdates()
         </Button>
       </template>
     </div>
-    <div @click="BrowserOpenURL(PROJECT_URL)" class="url"><Icon icon="github" />GitHub</div>
-    <div @click="BrowserOpenURL(TG_GROUP)" class="url"><Icon icon="telegram" />Telegram Group</div>
-    <div @click="BrowserOpenURL(TG_CHANNEL)" class="url">
+    <div @click="Browser.OpenURL(PROJECT_URL)" class="url"><Icon icon="github" />GitHub</div>
+    <div @click="Browser.OpenURL(TG_GROUP)" class="url"><Icon icon="telegram" />Telegram Group</div>
+    <div @click="Browser.OpenURL(TG_CHANNEL)" class="url">
       <Icon icon="telegram" />Telegram Channel
     </div>
   </div>

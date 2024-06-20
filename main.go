@@ -30,7 +30,9 @@ func main() {
 		Name:        "GUI.for.Cores",
 		Description: "A GUI program developed by vue3 + wails3.",
 		Services: []application.Service{
-			application.NewService(&bridge.App{}),
+			application.NewService(&bridge.App{
+				Ctx: &application.App{},
+			}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

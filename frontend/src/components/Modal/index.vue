@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { computed, provide } from 'vue'
 
-import { WindowToggleMaximise } from '@/bridge'
+import { Window } from '@/bridge'
 
 interface Props {
   open: boolean
@@ -69,7 +69,7 @@ provide('submit', handleSubmit)
       <div :style="contentStyle" class="modal" style="--wails-draggable: false">
         <div
           v-if="title"
-          @dblclick="WindowToggleMaximise"
+          @dblclick="Window.ToggleMaximise"
           class="title"
           style="--wails-draggable: drag"
         >

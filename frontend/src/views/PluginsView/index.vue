@@ -4,7 +4,7 @@ import { useI18n, I18nT } from 'vue-i18n'
 
 import { useMessage, useConfirm } from '@/hooks'
 import { debounce, ignoredError } from '@/utils'
-import { Removefile, BrowserOpenURL } from '@/bridge'
+import { Removefile, Browser } from '@/bridge'
 import { DraggableOptions, PluginTriggerEvent, PluginTrigger, View } from '@/constant'
 import {
   usePluginsStore,
@@ -46,7 +46,7 @@ const menuList: Menu[] = [
     label: 'common.openFile',
     handler: async (id: string) => {
       const plugin = pluginsStore.getPluginById(id)
-      BrowserOpenURL(envStore.env.basePath + '/' + plugin!.path)
+      Browser.OpenURL(envStore.env.basePath + '/' + plugin!.path)
     }
   }
 ]

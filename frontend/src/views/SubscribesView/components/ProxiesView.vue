@@ -6,7 +6,7 @@ import { ref, computed, inject } from 'vue'
 import { useBool, useMessage } from '@/hooks'
 import { deepClone, ignoredError, sampleID } from '@/utils'
 import { ProxyTypeOptions, DraggableOptions } from '@/constant'
-import { ClipboardSetText, Readfile, Writefile } from '@/bridge'
+import { Clipboard, Readfile, Writefile } from '@/bridge'
 import { type Menu, type SubscribeType, useSubscribesStore } from '@/stores'
 
 interface Props {
@@ -74,7 +74,7 @@ const menus: Menu[] = [
     handler: async (record: SubscribeType['proxies'][0]) => {
       try {
         const proxy = await getProxyByName(record.name)
-        await ClipboardSetText(stringify(proxy))
+        await Clipboard.SetText(stringify(proxy))
         message.success('common.copied')
       } catch (error: any) {
         message.error(error)

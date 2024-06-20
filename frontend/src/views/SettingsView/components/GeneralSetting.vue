@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useMessage } from '@/hooks'
 import { useAppSettingsStore, useEnvStore } from '@/stores'
 import { APP_TITLE, APP_VERSION, getTaskSchXmlString } from '@/utils'
-import { BrowserOpenURL, GetEnv, Writefile, Removefile, AbsolutePath } from '@/bridge'
+import { Browser, GetEnv, Writefile, Removefile, AbsolutePath } from '@/bridge'
 import { Theme, Lang, WindowStartState, Color, DefaultFontFamily } from '@/constant'
 import {
   QuerySchTask,
@@ -103,7 +103,7 @@ const onPermChange = async (v: boolean) => {
 
 const handleOpenFolder = async () => {
   const { basePath } = await GetEnv()
-  BrowserOpenURL(basePath)
+  Browser.OpenURL(basePath)
 }
 
 const checkSchtask = async () => {

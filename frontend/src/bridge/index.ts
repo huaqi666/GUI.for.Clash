@@ -1,3 +1,4 @@
+export * from '@wailsio/runtime'
 export * from './io'
 export * from './net'
 export * from './exec'

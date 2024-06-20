@@ -1,7 +1,7 @@
 import useI18n from '@/lang'
 import { handleChangeMode } from '@/utils'
 import { Color, Lang, Theme } from '@/constant'
-import { ExitApp, RestartApp, WindowReloadApp } from '@/bridge'
+import { ExitApp, RestartApp, Window } from '@/bridge'
 import {
   useAppSettingsStore,
   useAppStore,
@@ -213,7 +213,7 @@ export const getCommands = () => {
         {
           label: 'titlebar.reload',
           cmd: 'Reload Window',
-          handler: WindowReloadApp
+          handler: Window.Reload
         },
         {
           label: 'tray.restartTip',

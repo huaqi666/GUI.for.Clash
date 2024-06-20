@@ -12,11 +12,6 @@ import (
 	"strings"
 )
 
-const (
-	Binary = "Binary"
-	Text   = "Text"
-)
-
 func (a *App) Writefile(path string, content string, options IOOptions) FlagResult {
 	log.Printf("Writefile [%s]: %s", options.Mode, path)
 

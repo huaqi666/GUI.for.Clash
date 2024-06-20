@@ -381,7 +381,7 @@ tasks:
         vars:
           BUILD_FLAGS: "{{.BUILD_FLAGS}}"
     cmds:
-      - pnpm run build
+      - pnpm run build-only
 
   generate:bindings:
     summary: Generates bindings for the frontend

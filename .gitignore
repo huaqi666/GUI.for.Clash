@@ -5,3 +5,5 @@ frontend/bindings
 .DS_Store
 
 .task
+
+bin

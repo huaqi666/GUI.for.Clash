@@ -10,10 +10,13 @@ import (
 	"strings"
 
 	"github.com/klauspost/cpuid/v2"
+	"github.com/wailsapp/wails/v3/pkg/application"
 	"gopkg.in/yaml.v3"
 )
 
-type App struct{}
+type App struct {
+	Ctx *application.App
+}
 
 var Env = &EnvResult{
 	BasePath:    "",
@@ -44,7 +47,7 @@ func InitBridge() {
 	Env.AppName = filepath.Base(exePath)
 
 	// step2: Read Config
-	b, err := os.ReadFile(Env.BasePath + "/data/user.yaml")
+	b, err := os.ReadFile(Env.BasePath + UserProfile)
 	if err == nil {
 		yaml.Unmarshal(b, &Config)
 	}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 var serverMap = make(map[string]*http.Server)
@@ -16,6 +17,13 @@ type ResponseData struct {
 	Status  int
 	Headers map[string]string
 	Body    string
+}
+
+type RequestData struct {
+	Method string
+	URL    string
+	Header map[string][]string
+	Body   string
 }
 
 func (a *App) StartServer(address string, serverID string) FlagResult {
@@ -38,38 +46,47 @@ func (a *App) StartServer(address string, serverID string) FlagResult {
 
 			defer close(respChan)
 
-			// runtime.EventsOn(a.Ctx, requestID, func(data ...interface{}) {
-			// 	runtime.EventsOff(a.Ctx, requestID)
-			// 	resp := ResponseData{200, make(map[string]string), "A sample http server"}
-			// 	if len(data) >= 4 {
-			// 		if status, ok := data[0].(float64); ok {
-			// 			resp.Status = int(status)
-			// 		}
-			// 		if headers, ok := data[1].(string); ok {
-			// 			json.Unmarshal([]byte(headers), &resp.Headers)
-			// 		}
-			// 		if body, ok := data[2].(string); ok {
-			// 			resp.Body = body
-			// 			respBody = []byte(body)
-			// 		}
-			// 		if options, ok := data[3].(string); ok {
-			// 			ioOptions := IOOptions{Mode: "Text"}
-			// 			json.Unmarshal([]byte(options), &ioOptions)
-			// 			if ioOptions.Mode == Binary {
-			// 				body, err = base64.StdEncoding.DecodeString(resp.Body)
-			// 				if err != nil {
-			// 					resp.Status = 500
-			// 					respBody = []byte(err.Error())
-			// 				} else {
-			// 					respBody = body
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// 	respChan <- resp
-			// })
+			a.Ctx.Events.On(requestID, func(event *application.WailsEvent) {
+				a.Ctx.Events.Off(requestID)
+				resp := ResponseData{200, make(map[string]string), "A sample http server"}
+				println(event)
+				// if len(event.Data) >= 4 {
+				// 	if status, ok := event.Data[0].(float64); ok {
+				// 		resp.Status = int(status)
+				// 	}
+				// 	if headers, ok := event.Data[1].(string); ok {
+				// 		json.Unmarshal([]byte(headers), &resp.Headers)
+				// 	}
+				// 	if body, ok := event.Data[2].(string); ok {
+				// 		resp.Body = body
+				// 		respBody = []byte(body)
+				// 	}
+				// 	if options, ok := event.Data[3].(string); ok {
+				// 		ioOptions := IOOptions{Mode: "Text"}
+				// 		json.Unmarshal([]byte(options), &ioOptions)
+				// 		if ioOptions.Mode == Binary {
+				// 			body, err = base64.StdEncoding.DecodeString(resp.Body)
+				// 			if err != nil {
+				// 				resp.Status = 500
+				// 				respBody = []byte(err.Error())
+				// 			} else {
+				// 				respBody = body
+				// 			}
+				// 		}
+				// 	}
+				// }
+				respChan <- resp
+			})
 
-			// runtime.EventsEmit(a.Ctx, serverID, requestID, r.Method, r.URL.RequestURI(), r.Header, body)
+			a.Ctx.Events.Emit(&application.WailsEvent{
+				Name: serverID,
+				Data: &RequestData{
+					Method: r.Method,
+					URL:    r.URL.RequestURI(),
+					Header: r.Header,
+					Body:   string(body),
+				},
+			})
 
 			res := <-respChan
 			for key, value := range res.Headers {

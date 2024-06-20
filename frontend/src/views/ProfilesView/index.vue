@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { stringify } from 'yaml'
 import { useI18n, I18nT } from 'vue-i18n'
 
-import { ClipboardSetText } from '@/bridge'
+import { Clipboard } from '@/bridge'
 import { useMessage, useAlert } from '@/hooks'
 import { DraggableOptions, View } from '@/constant'
 import { debounce, deepClone, generateConfig, sampleID } from '@/utils'
@@ -61,7 +61,7 @@ const secondaryMenus: Menu[] = [
       try {
         const config = await generateConfig(p)
         const str = stringify(config)
-        const ok = await ClipboardSetText(str)
+        const ok = await Clipboard.SetText(str)
         if (!ok) throw 'ClipboardSetText Error'
         message.success('common.success')
       } catch (error: any) {

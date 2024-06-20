@@ -6,7 +6,7 @@ import { View } from '@/constant'
 import { useMessage } from '@/hooks'
 import { DraggableOptions } from '@/constant'
 import { updateProvidersProxies } from '@/api/kernel'
-import { BrowserOpenURL, ClipboardSetText, Removefile } from '@/bridge'
+import { Browser, Clipboard, Removefile } from '@/bridge'
 import { formatBytes, formatRelativeTime, debounce, ignoredError, formatDate } from '@/utils'
 import {
   type SubscribeType,
@@ -43,7 +43,7 @@ const menuList: Menu[] = [
     handler: async (id: string) => {
       const sub = subscribeStore.getSubscribeById(id)!
       if (sub) {
-        await ClipboardSetText(sub.url)
+        await Clipboard.SetText(sub.url)
         message.success('common.copied')
       }
     }
@@ -227,7 +227,7 @@ const onSortUpdate = debounce(subscribeStore.saveSubscribes, 1000)
           v-tips="'subscribe.website'"
           icon="link"
           :size="18"
-          @click="BrowserOpenURL(s.website)"
+          @click="Browser.OpenURL(s.website)"
           style="cursor: pointer"
         />
       </template>

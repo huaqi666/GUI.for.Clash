@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 import * as Stores from '@/stores'
-import { EventsOn, WindowHide } from '@/bridge'
+import { Events, Application } from '@/bridge'
 import { exitApp, sampleID, sleep } from '@/utils'
 import { useMessage, usePicker, useConfirm, usePrompt, useAlert } from '@/hooks'
 
@@ -35,7 +35,7 @@ window.Plugins.confirm = confirm
 window.Plugins.prompt = prompt
 window.Plugins.alert = alert
 
-EventsOn('launchArgs', async (args: string[]) => {
+Events.On('launchArgs', async (args: string[]) => {
   console.log('launchArgs', args)
   const url = new URL(args[0])
   if (url.pathname === '//install-config/') {
@@ -59,21 +59,21 @@ EventsOn('launchArgs', async (args: string[]) => {
 let startupResolve: (value: unknown) => void
 const startupPromise = new Promise((resolve) => (startupResolve = resolve))
 
-EventsOn('onStartup', async () => {
+Events.On('onStartup', async () => {
   console.log('OnStartup')
   await startupPromise
   pluginsStore.onStartupTrigger().catch(message.error)
 })
 
-EventsOn('beforeClose', async () => {
+Events.On('beforeClose', async () => {
   if (appSettings.app.exitOnClose) {
     exitApp()
   } else {
-    WindowHide()
+    Application.Hide()
   }
 })
 
-EventsOn('quitApp', () => exitApp())
+Events.On('quitApp', () => exitApp())
 
 appSettings.setupAppSettings().then(async () => {
   await Promise.all([

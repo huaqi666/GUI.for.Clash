@@ -6,14 +6,7 @@ import { Notify } from '@/bridge'
 import { debounce, ignoredError } from '@/utils'
 import { PluginTriggerEvent, ScheduledTasksFilePath, ScheduledTasksType } from '@/constant'
 import { useSubscribesStore, useRulesetsStore, usePluginsStore, useLogsStore } from '@/stores'
-import {
-  Readfile,
-  Writefile,
-  AddScheduledTask,
-  RemoveScheduledTask,
-  EventsOn,
-  EventsOff
-} from '@/bridge'
+import { Readfile, Writefile, AddScheduledTask, RemoveScheduledTask, Events } from '@/bridge'
 
 export type ScheduledTaskType = {
   id: string
@@ -47,7 +40,7 @@ export const useScheduledTasksStore = defineStore('scheduledtasks', () => {
       const taskID = await AddScheduledTask(cron, id)
       ScheduledTasksEvents.push(id)
       ScheduledTasksIDs.push(taskID)
-      EventsOn(id, () => runScheduledTask(id))
+      Events.On(id, () => runScheduledTask(id))
     })
   }
 
@@ -74,7 +67,7 @@ export const useScheduledTasksStore = defineStore('scheduledtasks', () => {
   }
 
   const removeScheduledTasks = () => {
-    ScheduledTasksEvents.forEach((event) => EventsOff(event))
+    ScheduledTasksEvents.forEach((event) => Events.Off(event))
     ScheduledTasksIDs.forEach((id) => RemoveScheduledTask(id))
     ScheduledTasksEvents.splice(0)
     ScheduledTasksIDs.splice(0)

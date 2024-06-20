@@ -6,7 +6,7 @@ import { useI18n, I18nT } from 'vue-i18n'
 import { View } from '@/constant'
 import { useMessage } from '@/hooks'
 import { DraggableOptions } from '@/constant'
-import { Removefile, Writefile, BrowserOpenURL } from '@/bridge'
+import { Removefile, Writefile, Browser } from '@/bridge'
 import { getProvidersRules, updateProvidersRules } from '@/api/kernel'
 import { debounce, formatRelativeTime, ignoredError, formatDate } from '@/utils'
 import {
@@ -36,7 +36,7 @@ const menuList: Menu[] = [
     label: 'common.openFile',
     handler: (id: string) => {
       const ruleset = rulesetsStore.getRulesetById(id)
-      BrowserOpenURL(envStore.env.basePath + '/' + ruleset!.path)
+      Browser.OpenURL(envStore.env.basePath + '/' + ruleset!.path)
     }
   },
   {
