@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/shirou/gopsutil/process"
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 func (a *App) Exec(path string, args []string, options ExecOptions) FlagResult {
@@ -83,8 +84,10 @@ func (a *App) ExecBackground(path string, args []string, outEvent string, endEve
 			defer wg.Done()
 			for outScanner.Scan() {
 				text := outScanner.Text()
-				println(text)
-				// runtime.EventsEmit(a.Ctx, outEvent, text)
+				a.Ctx.Events.Emit(&application.WailsEvent{
+					Name: outEvent,
+					Data: text,
+				})
 			}
 		}()
 
@@ -93,15 +96,19 @@ func (a *App) ExecBackground(path string, args []string, outEvent string, endEve
 			defer wg.Done()
 			for errScanner.Scan() {
 				text := errScanner.Text()
-				println(text)
-				// runtime.EventsEmit(a.Ctx, outEvent, text)
+				a.Ctx.Events.Emit(&application.WailsEvent{
+					Name: outEvent,
+					Data: text,
+				})
 			}
 		}()
 
 		go func() {
 			wg.Wait()
 			if endEvent != "" {
-				// runtime.EventsEmit(a.Ctx, endEvent)
+				a.Ctx.Events.Emit(&application.WailsEvent{
+					Name: endEvent,
+				})
 			}
 		}()
 	}

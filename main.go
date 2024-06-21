@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 // Wails uses Go's `embed` package to embed the frontend files into the binary.
@@ -16,10 +17,13 @@ import (
 //go:embed frontend/dist
 var assets embed.FS
 
+//go:embed frontend/dist/favicon.ico
+var icon []byte
+
 var isStartup = true
 
 func main() {
-	bridge.InitBridge()
+	appService := &bridge.App{}
 
 	// Create a new Wails application by providing the necessary options.
 	// Variables 'Name' and 'Description' are for application metadata.
@@ -30,9 +34,7 @@ func main() {
 		Name:        "GUI.for.Cores",
 		Description: "A GUI program developed by vue3 + wails3.",
 		Services: []application.Service{
-			application.NewService(&bridge.App{
-				Ctx: &application.App{},
-			}),
+			application.NewService(appService),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -42,16 +44,20 @@ func main() {
 		},
 	})
 
-	systemTray := app.NewSystemTray()
-	b, _ := assets.ReadFile("frontend/dist/wails.png")
-	systemTray.SetTemplateIcon(b)
+	appService.Ctx = app
+	bridge.InitBridge()
+	bridge.InitTray(app, icon, assets)
+	bridge.InitNotification(assets)
+	bridge.InitScheduledTasks()
 
-	menu := app.NewMenu()
-	menu.AddSubmenu("Test")
-
-	systemTray.SetMenu(menu)
-	systemTray.OnClick(func() {
-		println("test")
+	app.On(events.Common.ApplicationStarted, func(event *application.Event) {
+		println(isStartup)
+		if isStartup {
+			app.Events.Emit(&application.WailsEvent{
+				Name: "onStartup",
+			})
+			isStartup = false
+		}
 	})
 
 	// Create a new window with the necessary options.
@@ -60,7 +66,20 @@ func main() {
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
 	app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
-		Title: bridge.Env.AppName,
+		Title:                  bridge.Env.AppName,
+		MinWidth:               600,
+		MinHeight:              400,
+		Frameless:              bridge.Env.OS == "windows",
+		DisableResize:          false,
+		BackgroundType:         application.BackgroundTypeTranslucent,
+		BackgroundColour:       application.NewRGBA(255, 255, 255, 1),
+		OpenInspectorOnStartup: true,
+		Width: func() int {
+			if bridge.Config.Width != 0 {
+				return bridge.Config.Width
+			}
+			return 800
+		}(),
 		Height: func() int {
 			if bridge.Config.Height != 0 {
 				return bridge.Config.Height
@@ -70,49 +89,37 @@ func main() {
 			}
 			return 540
 		}(),
-		MinWidth:      600,
-		MinHeight:     400,
-		Frameless:     bridge.Env.OS == "windows",
-		DisableResize: false,
-		// StartHidden: func() bool {
-		// 	if bridge.Env.FromTaskSch {
-		// 		return bridge.Config.WindowStartState == 2
-		// 	}
-		// 	return false
-		// }(),
-		// WindowStartState: func() options.WindowStartState {
-		// 	if bridge.Env.FromTaskSch {
-		// 		return options.WindowStartState(bridge.Config.WindowStartState)
-		// 	}
-		// 	return 0
-		// }(),
-		// Windows: &windows.Options{
-		// 	WebviewIsTransparent: true,
-		// 	WindowIsTranslucent:  true,
-		// 	BackdropType:         windows.Acrylic,
-		// },
-		Width: func() int {
-			if bridge.Config.Width != 0 {
-				return bridge.Config.Width
+		StartState: func() application.WindowState {
+			if bridge.Env.FromTaskSch {
+				return application.WindowState(bridge.Config.WindowStartState)
 			}
-			return 800
+			return 0
 		}(),
+		Hidden: func() bool {
+			if bridge.Env.FromTaskSch {
+				return bridge.Config.WindowStartState == 2
+			}
+			return false
+		}(),
+		Windows: application.WindowsWindow{
+			BackdropType: application.Acrylic,
+		},
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
-			// About:
-			// About: &mac.AboutInfo{
-			// 	Title:   bridge.Env.AppName,
-			// 	Message: "© 2024 GUI.for.Cores",
-			// 	Icon:    icon,
-			// },
 		},
-		BackgroundColour: application.NewRGBA(255, 255, 255, 1),
-		// Linux: &linux.Options{
-		// 	Icon:                icon,
-		// 	WindowIsTranslucent: false,
-		// },
+		Linux: application.LinuxWindow{
+			Icon:                icon,
+			WindowIsTranslucent: true,
+			WebviewGpuPolicy:    application.WebviewGpuPolicyNever,
+		},
+		ShouldClose: func(window *application.WebviewWindow) bool {
+			appService.Ctx.Events.Emit(&application.WailsEvent{
+				Name: "beforeClose",
+			})
+			return true
+		},
 		// SingleInstanceLock: &options.SingleInstanceLock{
 		// 	UniqueId: func() string {
 		// 		if bridge.Config.MultipleInstance {
@@ -124,23 +131,6 @@ func main() {
 		// 		runtime.Show(app.Ctx)
 		// 		runtime.EventsEmit(app.Ctx, "launchArgs", data.Args)
 		// 	},
-		// },
-		// OnStartup: func(ctx context.Context) {
-		// 	runtime.LogSetLogLevel(ctx, logger.INFO)
-		// 	app.Ctx = ctx
-		// 	bridge.InitTray(app, icon, assets)
-		// 	bridge.InitScheduledTasks()
-		// 	bridge.InitNotification(assets)
-		// },
-		// OnDomReady: func(ctx context.Context) {
-		// 	if isStartup {
-		// 		runtime.EventsEmit(ctx, "onStartup")
-		// 		isStartup = false
-		// 	}
-		// },
-		// OnBeforeClose: func(ctx context.Context) (prevent bool) {
-		// 	runtime.EventsEmit(ctx, "beforeClose")
-		// 	return true
 		// },
 		URL: "/",
 	})

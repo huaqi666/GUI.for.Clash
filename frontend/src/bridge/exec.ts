@@ -39,8 +39,8 @@ export const ExecBackground = async (
     throw data
   }
 
-  Events.On(outEvent, (out: string) => {
-    onOut && onOut(out)
+  Events.On(outEvent, ({ data }: WailsEventsResponse) => {
+    onOut && onOut(data)
   })
 
   Events.On(endEvent, () => {

@@ -6,9 +6,13 @@ import (
 	"embed"
 	"log"
 	"os"
+
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-func InitTray(a *App, icon []byte, fs embed.FS) {
+var systemTray *application.SystemTray
+
+func InitTray(app *application.App, icon []byte, fs embed.FS) {
 	icons := [6][2]string{
 		{"frontend/dist/icons/tray_normal_light.ico", "data/.cache/icons/tray_normal_light.ico"},
 		{"frontend/dist/icons/tray_normal_dark.ico", "data/.cache/icons/tray_normal_dark.ico"},
@@ -28,17 +32,30 @@ func InitTray(a *App, icon []byte, fs embed.FS) {
 			os.WriteFile(path, b, os.ModePerm)
 		}
 	}
+
+	systemTray = app.NewSystemTray()
+	b, _ := fs.ReadFile("frontend/dist/wails.png")
+	systemTray.SetTemplateIcon(b)
+
+	menu := app.NewMenu()
+	menu.AddSubmenu("Test")
+
+	systemTray.SetMenu(menu)
+	systemTray.OnClick(func() {
+		println("test")
+	})
 }
 
 func (a *App) UpdateTray(tray TrayContent) {
+	println("teray, %v", tray.Icon)
 	if tray.Icon != "" {
-		// ico, err := os.ReadFile(GetPath(tray.Icon))
+		// icon, err := os.ReadFile(GetPath(tray.Icon))
 		// if err == nil {
-		// systray.SetIcon(ico)
+		// 	systemTray.SetTemplateIcon(icon)
 		// }
 	}
 	if tray.Title != "" {
-		// systray.SetTitle(tray.Title)
+		systemTray.SetLabel(tray.Title)
 		// runtime.WindowSetTitle(a.Ctx, tray.Title)
 	}
 	if tray.Tooltip != "" {
@@ -47,7 +64,5 @@ func (a *App) UpdateTray(tray TrayContent) {
 }
 
 func (a *App) ExitApp() {
-	// systray.Quit()
-	// runtime.Quit(a.Ctx)
-	os.Exit(0)
+	a.Ctx.Quit()
 }
