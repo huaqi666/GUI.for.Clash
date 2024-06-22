@@ -8,7 +8,12 @@ declare global {
   /**
    * Data format returned by wails events
    */
-  type WailsEventsResponse = { name: string; sender: string; data: string; Cancelled: boolean }
+  type WailsEventsResponse<T = string> = {
+    name: string
+    sender: string
+    data: T
+    Cancelled: boolean
+  }
 
   /**
    * The variable is initialized in `globalMethods.ts:20`

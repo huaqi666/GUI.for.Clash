@@ -9,15 +9,25 @@ type RequestType = {
   headers: Record<string, string>
   body: string
 }
+
 type ResponseType = {
-  end: (
-    status: number,
-    headers: Record<string, string>,
-    body: string,
-    options: { mode: 'Binary' | 'Text' }
-  ) => void
+  status: number
+  headers: Record<string, string>
+  body: string
+  options: { Mode: 'Binary' | 'Text' }
 }
-type HttpServerHandler = (req: RequestType, res: ResponseType) => Promise<void>
+
+type HttpServerHandler = (
+  req: RequestType,
+  res: {
+    end: (
+      status: ResponseType['status'],
+      headers: ResponseType['headers'],
+      body: ResponseType['body'],
+      options: ResponseType['options']
+    ) => void
+  }
+) => Promise<void>
 
 export const StartServer = async (address: string, id: string, handler: HttpServerHandler) => {
   const { flag, data } = await App.StartServer(address, id)
@@ -25,8 +35,8 @@ export const StartServer = async (address: string, id: string, handler: HttpServ
     throw data
   }
 
-  Events.On(id, async (...args: any[]) => {
-    const [id, method, url, headers, body] = args
+  Events.On(id, async ({ data }: WailsEventsResponse<RequestType>) => {
+    const { id, method, url, headers, body } = data
     try {
       await handler(
         {
@@ -37,15 +47,10 @@ export const StartServer = async (address: string, id: string, handler: HttpServ
           body
         },
         {
-          end: (status, headers, body, options = { mode: 'Text' }) => {
+          end: (status, headers, body, options = { Mode: 'Text' }) => {
             Events.Emit({
               name: id,
-              data: {
-                status,
-                headers: JSON.stringify(headers),
-                body,
-                options: JSON.stringify(options)
-              }
+              data: { status, headers, body, options }
             })
           }
         }
@@ -56,9 +61,9 @@ export const StartServer = async (address: string, id: string, handler: HttpServ
         name: id,
         data: {
           status: 500,
-          headers: JSON.stringify({ 'Content-Type': 'text/plain; charset=utf-8' }),
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
           body: err.message || err,
-          options: JSON.stringify({ Mode: 'Text' })
+          options: { Mode: 'Text' }
         }
       })
     }

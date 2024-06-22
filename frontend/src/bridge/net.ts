@@ -75,7 +75,9 @@ const requestWithProgress = (method: 'Download' | 'Upload') => {
 
     const event = sampleID()
 
-    Events.On(event, progress)
+    Events.On(event, ({ data }: WailsEventsResponse<{ Progress: number; Total: number }>) =>
+      progress(data.Progress, data.Total)
+    )
 
     const {
       flag,

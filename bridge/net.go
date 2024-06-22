@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 func (a *App) Requests(method string, url string, headers map[string]string, body string, options RequestOptions) HTTPResult {
@@ -142,7 +144,13 @@ func (a *App) Upload(url string, path string, headers map[string]string, event s
 func (wt *WriteTracker) Write(p []byte) (n int, err error) {
 	wt.Progress += int64(len(p))
 	if wt.ProgressChange != "" {
-		// runtime.EventsEmia(wt.App.Ctx, wt.ProgressChange, wt.Progress, wt.Total)
+		wt.App.Ctx.Events.Emit(&application.WailsEvent{
+			Name: wt.ProgressChange,
+			Data: map[string]int64{
+				"Progress": wt.Progress,
+				"Total":    wt.Total,
+			},
+		})
 	}
 	return
 }

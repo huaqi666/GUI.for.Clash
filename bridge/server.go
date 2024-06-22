@@ -1,9 +1,12 @@
 package bridge
 
 import (
+	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -14,16 +17,18 @@ import (
 var serverMap = make(map[string]*http.Server)
 
 type ResponseData struct {
-	Status  int
-	Headers map[string]string
-	Body    string
+	Status  int               `json:"status"`
+	Headers map[string]string `json:"headers"`
+	Body    string            `json:"body"`
+	Options IOOptions         `json:"options"`
 }
 
 type RequestData struct {
-	Method string
-	URL    string
-	Header map[string][]string
-	Body   string
+	Id      string              `json:"id"`
+	Method  string              `json:"method"`
+	Url     string              `json:"url"`
+	Headers map[string][]string `json:"headers"`
+	Body    string              `json:"body"`
 }
 
 func (a *App) StartServer(address string, serverID string) FlagResult {
@@ -40,7 +45,6 @@ func (a *App) StartServer(address string, serverID string) FlagResult {
 			}
 
 			requestID := uuid.New().String()
-			println(body, requestID)
 			respChan := make(chan ResponseData)
 			respBody := []byte{}
 
@@ -48,43 +52,51 @@ func (a *App) StartServer(address string, serverID string) FlagResult {
 
 			a.Ctx.Events.On(requestID, func(event *application.WailsEvent) {
 				a.Ctx.Events.Off(requestID)
-				resp := ResponseData{200, make(map[string]string), "A sample http server"}
-				println(event)
-				// if len(event.Data) >= 4 {
-				// 	if status, ok := event.Data[0].(float64); ok {
-				// 		resp.Status = int(status)
-				// 	}
-				// 	if headers, ok := event.Data[1].(string); ok {
-				// 		json.Unmarshal([]byte(headers), &resp.Headers)
-				// 	}
-				// 	if body, ok := event.Data[2].(string); ok {
-				// 		resp.Body = body
-				// 		respBody = []byte(body)
-				// 	}
-				// 	if options, ok := event.Data[3].(string); ok {
-				// 		ioOptions := IOOptions{Mode: "Text"}
-				// 		json.Unmarshal([]byte(options), &ioOptions)
-				// 		if ioOptions.Mode == Binary {
-				// 			body, err = base64.StdEncoding.DecodeString(resp.Body)
-				// 			if err != nil {
-				// 				resp.Status = 500
-				// 				respBody = []byte(err.Error())
-				// 			} else {
-				// 				respBody = body
-				// 			}
-				// 		}
-				// 	}
-				// }
+				resp := ResponseData{200, map[string]string{}, "A sample http server", IOOptions{Mode: Text}}
+
+				dataType := reflect.TypeOf(event.Data)
+				fmt.Println("event.Data type:", dataType)
+
+				if data, ok := event.Data.(map[string]interface{}); ok {
+					if status, ok := data["status"].(float64); ok {
+						resp.Status = int(status)
+					}
+					if headers, ok := data["headers"].(map[string]interface{}); ok {
+						for key, value := range headers {
+							if strValue, ok := value.(string); ok {
+								resp.Headers[key] = strValue
+							}
+						}
+					}
+					if body, ok := data["body"].(string); ok {
+						resp.Body = body
+					}
+					if options, ok := data["options"].(map[string]interface{}); ok {
+						if mode, ok := options["Mode"].(string); ok {
+							resp.Options.Mode = mode
+						}
+					}
+					if resp.Options.Mode == Text {
+						respBody = []byte(resp.Body)
+					} else {
+						respBody, err = base64.StdEncoding.DecodeString(resp.Body)
+						if err != nil {
+							resp.Status = 500
+							respBody = []byte(err.Error())
+						}
+					}
+				}
 				respChan <- resp
 			})
 
 			a.Ctx.Events.Emit(&application.WailsEvent{
 				Name: serverID,
 				Data: &RequestData{
-					Method: r.Method,
-					URL:    r.URL.RequestURI(),
-					Header: r.Header,
-					Body:   string(body),
+					Id:      requestID,
+					Method:  r.Method,
+					Url:     r.URL.RequestURI(),
+					Headers: r.Header,
+					Body:    string(body),
 				},
 			})
 
