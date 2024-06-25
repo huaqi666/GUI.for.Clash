@@ -10,7 +10,10 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-var systemTray *application.SystemTray
+var (
+	appTray *application.SystemTray
+	appMenu *application.Menu
+)
 
 func InitTray(app *application.App, icon []byte, fs embed.FS) {
 	icons := [6][2]string{
@@ -33,17 +36,14 @@ func InitTray(app *application.App, icon []byte, fs embed.FS) {
 		}
 	}
 
-	systemTray = app.NewSystemTray()
-	b, _ := fs.ReadFile("frontend/dist/wails.png")
-	systemTray.SetTemplateIcon(b)
+	appTray = app.NewSystemTray()
+	appMenu = app.NewMenu()
 
-	menu := app.NewMenu()
-	menu.AddSubmenu("Test")
+	appTray.SetMenu(appMenu)
 
-	systemTray.SetMenu(menu)
-	systemTray.OnClick(func() {
-		println("test")
-	})
+	appTray.OnClick(func() { app.Events.Emit(&application.WailsEvent{Name: "tray:click"}) })
+	appTray.OnDoubleClick(func() { app.Events.Emit(&application.WailsEvent{Name: "tray:dblclick"}) })
+	appTray.OnRightDoubleClick(func() { app.Events.Emit(&application.WailsEvent{Name: "tray:rdblclick"}) })
 }
 
 func (a *App) UpdateTray(tray TrayContent) {
@@ -55,11 +55,45 @@ func (a *App) UpdateTray(tray TrayContent) {
 		// }
 	}
 	if tray.Title != "" {
-		systemTray.SetLabel(tray.Title)
+		// tray.SetLabel(tray.Title)
 		// runtime.WindowSetTitle(a.Ctx, tray.Title)
 	}
 	if tray.Tooltip != "" {
 		// systray.SetTooltip(tray.Tooltip)
+	}
+}
+
+func (a *App) UpdateTrayMenus(menus []MenuItem) {
+	log.Printf("UpdateTrayMenus")
+
+	appMenu = a.Ctx.NewMenu()
+
+	for _, menu := range menus {
+		createMenuItem(menu, a, appMenu)
+	}
+
+	appTray.SetMenu(appMenu)
+}
+
+func createMenuItem(menu MenuItem, a *App, parent *application.Menu) {
+	if menu.Hidden {
+		return
+	}
+
+	switch menu.Type {
+	case "item":
+		if len(menu.Children) == 0 {
+			parent.Add(menu.Text).OnClick(func(ctx *application.Context) {
+				a.Ctx.Events.Emit(&application.WailsEvent{Name: menu.Event})
+			})
+			return
+		}
+		subMenu := parent.AddSubmenu(menu.Text)
+		for _, child := range menu.Children {
+			createMenuItem(child, a, subMenu)
+		}
+	case "separator":
+		appMenu.AddSeparator()
 	}
 }
 

@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 import * as Stores from '@/stores'
-import { Events, Application } from '@/bridge'
+import { Events, Application, Window } from '@/bridge'
 import { exitApp, sampleID, sleep } from '@/utils'
 import { useMessage, usePicker, useConfirm, usePrompt, useAlert } from '@/hooks'
 
@@ -71,6 +71,18 @@ Events.On('beforeClose', async () => {
   } else {
     Application.Hide()
   }
+})
+
+Events.On('tray:click', () => {
+  console.log('tray:click')
+})
+
+Events.On('tray:dblclick', () => {
+  console.log('tray:dblclick')
+})
+
+Events.On('tray:rdblclick', () => {
+  console.log('tray:rdblclick')
 })
 
 Events.On('quitApp', () => exitApp())

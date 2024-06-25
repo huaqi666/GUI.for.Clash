@@ -37,8 +37,9 @@ func main() {
 			application.NewService(appService),
 		},
 		Assets: application.AssetOptions{
-			Handler:    application.AssetFileServerFS(assets),
-			Middleware: appService.BridgeHTTPApi,
+			Handler:        application.AssetFileServerFS(assets),
+			Middleware:     appService.BridgeHTTPApi,
+			DisableLogging: true,
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
