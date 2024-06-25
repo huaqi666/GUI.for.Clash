@@ -59,3 +59,9 @@ type WriteTracker struct {
 	ProgressChange string
 	App            *App
 }
+
+type BridgeHTTPApiIOParams struct {
+	Path    string
+	Content string
+	Options IOOptions
+}

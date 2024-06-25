@@ -4,8 +4,22 @@ type IOOptions = {
   Mode?: 'Binary' | 'Text'
 }
 
+const enum BridgeHTTPApi {
+  WriteFile = '/bridge/fs/write',
+  ReadFile = '/bridge/fs/read'
+}
+
 export const Writefile = async (path: string, content: string, options: IOOptions = {}) => {
-  const { flag, data } = await App.Writefile(path, content, { Mode: 'Text', ...options })
+  // const { flag, data } = await App.Writefile(path, content, { Mode: 'Text', ...options })
+  const res = await fetch(BridgeHTTPApi.WriteFile, {
+    method: 'POST',
+    body: JSON.stringify({
+      Path: path,
+      Content: content,
+      Options: { Mode: 'Text', ...options }
+    })
+  })
+  const { flag, data } = await res.json()
   if (!flag) {
     throw data
   }
@@ -13,7 +27,16 @@ export const Writefile = async (path: string, content: string, options: IOOption
 }
 
 export const Readfile = async (path: string, options: IOOptions = {}) => {
-  const { flag, data } = await App.Readfile(path, { Mode: 'Text', ...options })
+  // const { flag, data } = await App.Readfile(path, { Mode: 'Text', ...options })
+  const res = await fetch(BridgeHTTPApi.ReadFile, {
+    method: 'POST',
+    body: JSON.stringify({
+      Path: path,
+      Content: '',
+      Options: { Mode: 'Text', ...options }
+    })
+  })
+  const { flag, data } = await res.json()
   if (!flag) {
     throw data
   }

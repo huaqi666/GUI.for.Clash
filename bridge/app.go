@@ -1,8 +1,11 @@
 package bridge
 
 import (
+	"encoding/json"
+	"io"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -94,4 +97,67 @@ func (a *App) GetInterfaces() FlagResult {
 	}
 
 	return FlagResult{true, strings.Join(interfaceNames, "|")}
+}
+
+func (a *App) BridgeHTTPApi(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" && r.URL.Path == "/bridge/fs/write" {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				w.Write(GetBridgeHTTPApiError(err))
+				return
+			}
+
+			params := BridgeHTTPApiIOParams{}
+
+			err = json.Unmarshal(body, &params)
+			if err != nil {
+				w.Write(GetBridgeHTTPApiError(err))
+				return
+			}
+
+			result := a.Writefile(params.Path, params.Content, params.Options)
+
+			b, err := json.Marshal(result)
+			if err != nil {
+				w.Write(GetBridgeHTTPApiError(err))
+				return
+			}
+
+			w.Write(b)
+			return
+		}
+
+		if r.Method == "POST" && r.URL.Path == "/bridge/fs/read" {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				w.Write(GetBridgeHTTPApiError(err))
+				return
+			}
+
+			params := BridgeHTTPApiIOParams{}
+
+			err = json.Unmarshal(body, &params)
+			if err != nil {
+				w.Write(GetBridgeHTTPApiError(err))
+				return
+			}
+
+			result := a.Readfile(params.Path, params.Options)
+
+			b, err := json.Marshal(result)
+			if err != nil {
+				w.Write(GetBridgeHTTPApiError(err))
+				return
+			}
+
+			w.Write(b)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

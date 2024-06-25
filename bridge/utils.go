@@ -1,6 +1,7 @@
 package bridge
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -53,4 +54,12 @@ func GetHeader(headers map[string]string) http.Header {
 func ConvertByte2String(byte []byte) string {
 	decodeBytes, _ := simplifiedchinese.GB18030.NewDecoder().Bytes(byte)
 	return string(decodeBytes)
+}
+
+func GetBridgeHTTPApiError(err error) []byte {
+	b, _ := json.Marshal(&FlagResult{
+		Flag: false,
+		Data: err.Error(),
+	})
+	return b
 }
