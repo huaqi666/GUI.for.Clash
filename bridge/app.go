@@ -32,7 +32,7 @@ var Env = &EnvResult{
 
 var Config = &AppConfig{}
 
-func InitBridge() {
+func InitApp() {
 	// step1: Set Env
 	exePath, err := os.Executable()
 	if err != nil {
@@ -53,6 +53,22 @@ func InitBridge() {
 	b, err := os.ReadFile(Env.BasePath + UserProfile)
 	if err == nil {
 		yaml.Unmarshal(b, &Config)
+	}
+
+	if Config.Width == 0 {
+		Config.Width = 800
+	}
+
+	if Config.Height == 0 {
+		if Env.OS == "linux" {
+			Config.Height = 510
+		} else {
+			Config.Height = 540
+		}
+	}
+
+	if !Env.FromTaskSch {
+		Config.WindowStartState = 0
 	}
 }
 

@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 import * as Stores from '@/stores'
-import { Events, Application, Window } from '@/bridge'
+import { Events, Application } from '@/bridge'
 import { exitApp, sampleID, sleep } from '@/utils'
 import { useMessage, usePicker, useConfirm, usePrompt, useAlert } from '@/hooks'
 

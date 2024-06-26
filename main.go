@@ -4,9 +4,9 @@ import (
 	"embed"
 	"guiforcores/bridge"
 	"log"
+	"log/slog"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
-	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 // Wails uses Go's `embed` package to embed the frontend files into the binary.
@@ -20,8 +20,6 @@ var assets embed.FS
 //go:embed frontend/dist/favicon.png
 var icon []byte
 
-var isStartup = true
-
 func main() {
 	appService := &bridge.App{}
 
@@ -33,6 +31,8 @@ func main() {
 	app := application.New(application.Options{
 		Name:        "GUI.for.Cores",
 		Description: "A GUI program developed by vue3 + wails3.",
+		Icon:        icon,
+		LogLevel:    slog.LevelWarn,
 		Services: []application.Service{
 			application.NewService(appService),
 		},
@@ -41,26 +41,13 @@ func main() {
 			Middleware:     appService.BridgeHTTPApi,
 			DisableLogging: true,
 		},
-		Mac: application.MacOptions{
-			ApplicationShouldTerminateAfterLastWindowClosed: true,
-		},
 	})
 
 	appService.Ctx = app
-	bridge.InitBridge()
+	bridge.InitApp()
 	bridge.InitTray(app, icon, assets)
 	bridge.InitNotification(assets)
 	bridge.InitScheduledTasks()
-
-	app.On(events.Common.ApplicationStarted, func(event *application.Event) {
-		println(isStartup)
-		if isStartup {
-			app.Events.Emit(&application.WailsEvent{
-				Name: "onStartup",
-			})
-			isStartup = false
-		}
-	})
 
 	// Create a new window with the necessary options.
 	// 'Title' is the title of the window.
@@ -69,41 +56,20 @@ func main() {
 	// 'URL' is the URL that will be loaded into the webview.
 	app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
 		Name:                   "Main",
-		Title:                  bridge.Env.AppName,
+		URL:                    "/",
 		MinWidth:               600,
 		MinHeight:              400,
-		Frameless:              bridge.Env.OS == "windows",
+		Centered:               true,
 		DisableResize:          false,
+		OpenInspectorOnStartup: true,
+		Title:                  bridge.Env.AppName,
+		Width:                  bridge.Config.Width,
+		Height:                 bridge.Config.Height,
+		Frameless:              bridge.Env.OS == "windows",
+		Hidden:                 bridge.Env.FromTaskSch && bridge.Config.WindowStartState == 2,
 		BackgroundType:         application.BackgroundTypeTranslucent,
 		BackgroundColour:       application.NewRGBA(255, 255, 255, 1),
-		OpenInspectorOnStartup: true,
-		Width: func() int {
-			if bridge.Config.Width != 0 {
-				return bridge.Config.Width
-			}
-			return 800
-		}(),
-		Height: func() int {
-			if bridge.Config.Height != 0 {
-				return bridge.Config.Height
-			}
-			if bridge.Env.OS == "linux" {
-				return 510
-			}
-			return 540
-		}(),
-		StartState: func() application.WindowState {
-			if bridge.Env.FromTaskSch {
-				return application.WindowState(bridge.Config.WindowStartState)
-			}
-			return 0
-		}(),
-		Hidden: func() bool {
-			if bridge.Env.FromTaskSch {
-				return bridge.Config.WindowStartState == 2
-			}
-			return false
-		}(),
+		StartState:             application.WindowState(bridge.Config.WindowStartState),
 		Windows: application.WindowsWindow{
 			BackdropType: application.Acrylic,
 		},
@@ -135,7 +101,6 @@ func main() {
 		// 		runtime.EventsEmit(app.Ctx, "launchArgs", data.Args)
 		// 	},
 		// },
-		URL: "/",
 	})
 
 	// Run the application. This blocks until the application has been exited.
