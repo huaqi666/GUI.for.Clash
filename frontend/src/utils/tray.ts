@@ -84,7 +84,7 @@ const getTrayMenus = () => {
           show: true,
           children: group.all.map((proxy) => {
             return {
-              type: 'item',
+              type: 'radio',
               text: proxy.name,
               show: true,
               checked: proxy.name === group.now,
@@ -131,19 +131,19 @@ const getTrayMenus = () => {
       hidden: !appSettings.app.kernel.running,
       children: [
         {
-          type: 'item',
+          type: 'radio',
           text: 'kernel.global',
           checked: kernelApiStore.config.mode === 'global',
           event: () => handleChangeMode('global')
         },
         {
-          type: 'item',
+          type: 'radio',
           text: 'kernel.rule',
           checked: kernelApiStore.config.mode === 'rule',
           event: () => handleChangeMode('rule')
         },
         {
-          type: 'item',
+          type: 'radio',
           text: 'kernel.direct',
           checked: kernelApiStore.config.mode === 'direct',
           event: () => handleChangeMode('direct')
@@ -239,19 +239,19 @@ const getTrayMenus = () => {
           text: 'settings.theme.name',
           children: [
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.theme.dark',
               checked: appSettings.app.theme === Theme.Dark,
               event: () => (appSettings.app.theme = Theme.Dark)
             },
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.theme.light',
               checked: appSettings.app.theme === Theme.Light,
               event: () => (appSettings.app.theme = Theme.Light)
             },
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.theme.auto',
               checked: appSettings.app.theme === Theme.Auto,
               event: () => (appSettings.app.theme = Theme.Auto)
@@ -263,37 +263,37 @@ const getTrayMenus = () => {
           text: 'settings.color.name',
           children: [
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.color.default',
               checked: appSettings.app.color === Color.Default,
               event: () => (appSettings.app.color = Color.Default)
             },
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.color.orange',
               checked: appSettings.app.color === Color.Orange,
               event: () => (appSettings.app.color = Color.Orange)
             },
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.color.pink',
               checked: appSettings.app.color === Color.Pink,
               event: () => (appSettings.app.color = Color.Pink)
             },
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.color.red',
               checked: appSettings.app.color === Color.Red,
               event: () => (appSettings.app.color = Color.Red)
             },
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.color.skyblue',
               checked: appSettings.app.color === Color.Skyblue,
               event: () => (appSettings.app.color = Color.Skyblue)
             },
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.color.green',
               checked: appSettings.app.color === Color.Green,
               event: () => (appSettings.app.color = Color.Green)
@@ -305,13 +305,13 @@ const getTrayMenus = () => {
           text: 'settings.lang.name',
           children: [
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.lang.zh',
               checked: appSettings.app.lang === Lang.ZH,
               event: () => (appSettings.app.lang = Lang.ZH)
             },
             {
-              type: 'item',
+              type: 'radio',
               text: 'settings.lang.en',
               checked: appSettings.app.lang === Lang.EN,
               event: () => (appSettings.app.lang = Lang.EN)
@@ -352,13 +352,13 @@ const getTrayIcons = () => {
   const kernelApiStore = useKernelApiStore()
 
   const themeMode = appSettings.themeMode
-  let icon = `data/.cache/icons/tray_normal_${themeMode}.ico`
+  let icon = `data/.cache/icons/tray_normal_${themeMode}.png`
 
   if (appSettings.app.kernel.running) {
     if (kernelApiStore.config.tun.enable) {
-      icon = `data/.cache/icons/tray_tun_${themeMode}.ico`
+      icon = `data/.cache/icons/tray_tun_${themeMode}.png`
     } else if (envStore.systemProxy) {
-      icon = `data/.cache/icons/tray_proxy_${themeMode}.ico`
+      icon = `data/.cache/icons/tray_proxy_${themeMode}.png`
     }
   }
   return icon

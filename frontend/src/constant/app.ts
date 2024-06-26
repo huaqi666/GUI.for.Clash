@@ -107,7 +107,7 @@ export const PluginsTriggerOptions = [
 ]
 
 export type MenuItem = {
-  type: 'item' | 'separator'
+  type: 'item' | 'radio' | 'checkbox' | 'separator'
   text?: string
   tooltip?: string
   event?: (() => void) | string

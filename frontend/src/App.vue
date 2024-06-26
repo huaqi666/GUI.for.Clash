@@ -65,24 +65,12 @@ Events.On('onStartup', async () => {
   pluginsStore.onStartupTrigger().catch(message.error)
 })
 
-Events.On('beforeClose', async () => {
+Events.On('onBeforeExitApp', async () => {
   if (appSettings.app.exitOnClose) {
     exitApp()
   } else {
     Application.Hide()
   }
-})
-
-Events.On('tray:click', () => {
-  console.log('tray:click')
-})
-
-Events.On('tray:dblclick', () => {
-  console.log('tray:dblclick')
-})
-
-Events.On('tray:rdblclick', () => {
-  console.log('tray:rdblclick')
 })
 
 Events.On('quitApp', () => exitApp())

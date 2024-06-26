@@ -67,7 +67,7 @@ type BridgeHTTPApiIOParams struct {
 }
 
 type MenuItem struct {
-	Type     string     `json:"type"` // Menu Type: item / separator
+	Type     string     `json:"type"` // Menu Type: item / separator / checkbox / radio
 	Text     string     `json:"text"`
 	Tooltip  string     `json:"tooltip"`
 	Event    string     `json:"event"`

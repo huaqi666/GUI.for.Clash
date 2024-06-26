@@ -16,22 +16,25 @@ var (
 )
 
 func InitTray(app *application.App, icon []byte, fs embed.FS) {
-	icons := [6][2]string{
-		{"frontend/dist/icons/tray_normal_light.ico", "data/.cache/icons/tray_normal_light.ico"},
-		{"frontend/dist/icons/tray_normal_dark.ico", "data/.cache/icons/tray_normal_dark.ico"},
-		{"frontend/dist/icons/tray_proxy_light.ico", "data/.cache/icons/tray_proxy_light.ico"},
-		{"frontend/dist/icons/tray_proxy_dark.ico", "data/.cache/icons/tray_proxy_dark.ico"},
-		{"frontend/dist/icons/tray_tun_light.ico", "data/.cache/icons/tray_tun_light.ico"},
-		{"frontend/dist/icons/tray_tun_dark.ico", "data/.cache/icons/tray_tun_dark.ico"},
+	src := "frontend/dist/icons/"
+	dst := "data/.cache/icons/"
+
+	icons := []string{
+		"tray_normal_light.png",
+		"tray_normal_dark.png",
+		"tray_proxy_light.png",
+		"tray_proxy_dark.png",
+		"tray_tun_light.png",
+		"tray_tun_dark.png",
 	}
 
-	os.MkdirAll(GetPath("data/.cache/icons"), os.ModePerm)
+	os.MkdirAll(GetPath(dst), os.ModePerm)
 
-	for _, item := range icons {
-		path := GetPath(item[1])
+	for _, icon := range icons {
+		path := GetPath(dst + icon)
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			log.Printf("InitTray [Icon]: %s", item[1])
-			b, _ := fs.ReadFile(item[0])
+			log.Printf("InitTray [Icon]: %s", src+icon)
+			b, _ := fs.ReadFile(src + icon)
 			os.WriteFile(path, b, os.ModePerm)
 		}
 	}
@@ -39,27 +42,27 @@ func InitTray(app *application.App, icon []byte, fs embed.FS) {
 	appTray = app.NewSystemTray()
 	appMenu = app.NewMenu()
 
+	appTray.SetIcon(icon)
+	appTray.SetDarkModeIcon(icon)
 	appTray.SetMenu(appMenu)
-
-	appTray.OnClick(func() { app.Events.Emit(&application.WailsEvent{Name: "tray:click"}) })
-	appTray.OnDoubleClick(func() { app.Events.Emit(&application.WailsEvent{Name: "tray:dblclick"}) })
-	appTray.OnRightDoubleClick(func() { app.Events.Emit(&application.WailsEvent{Name: "tray:rdblclick"}) })
+	appTray.OnClick(func() {
+		win := app.GetWindowByName("Main")
+		win.UnMinimise()
+		win.Show()
+	})
 }
 
 func (a *App) UpdateTray(tray TrayContent) {
-	println("teray, %v", tray.Icon)
 	if tray.Icon != "" {
-		// icon, err := os.ReadFile(GetPath(tray.Icon))
-		// if err == nil {
-		// 	systemTray.SetTemplateIcon(icon)
-		// }
+		icon, err := os.ReadFile(GetPath(tray.Icon))
+		if err == nil {
+			appTray.SetIcon(icon)
+			appTray.SetDarkModeIcon(icon)
+		}
 	}
 	if tray.Title != "" {
-		// tray.SetLabel(tray.Title)
-		// runtime.WindowSetTitle(a.Ctx, tray.Title)
-	}
-	if tray.Tooltip != "" {
-		// systray.SetTooltip(tray.Tooltip)
+		appTray.SetLabel(tray.Title)
+		a.Ctx.GetWindowByName("Main").SetTitle(tray.Title)
 	}
 }
 
@@ -80,23 +83,25 @@ func createMenuItem(menu MenuItem, a *App, parent *application.Menu) {
 		return
 	}
 
-	switch menu.Type {
-	case "item":
-		if len(menu.Children) == 0 {
-			parent.Add(menu.Text).OnClick(func(ctx *application.Context) {
-				a.Ctx.Events.Emit(&application.WailsEvent{Name: menu.Event})
-			})
-			return
-		}
+	if len(menu.Children) != 0 {
 		subMenu := parent.AddSubmenu(menu.Text)
 		for _, child := range menu.Children {
 			createMenuItem(child, a, subMenu)
 		}
+		return
+	}
+
+	onClick := func(ctx *application.Context) {
+		a.Ctx.Events.Emit(&application.WailsEvent{Name: menu.Event})
+	}
+
+	switch menu.Type {
+	case "item":
+		parent.Add(menu.Text).SetChecked(menu.Checked).OnClick(onClick)
+	case "radio":
+		parent.AddRadio(menu.Text, menu.Checked).OnClick(onClick)
 	case "separator":
 		appMenu.AddSeparator()
 	}
-}
 
-func (a *App) ExitApp() {
-	a.Ctx.Quit()
 }

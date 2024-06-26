@@ -56,6 +56,10 @@ func InitBridge() {
 	}
 }
 
+func (a *App) ExitApp() {
+	a.Ctx.Quit()
+}
+
 func (a *App) RestartApp() FlagResult {
 	exePath := Env.BasePath + "/" + Env.AppName
 
@@ -67,7 +71,7 @@ func (a *App) RestartApp() FlagResult {
 		return FlagResult{false, err.Error()}
 	}
 
-	// s.ExitApp()
+	a.Ctx.Quit()
 
 	return FlagResult{true, "Success"}
 }

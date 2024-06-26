@@ -12,7 +12,7 @@ func InitNotification(fs embed.FS) {
 	icons := [3][2]string{
 		{"frontend/dist/imgs/notify_success.png", "data/.cache/imgs/notify_success.png"},
 		{"frontend/dist/imgs/notify_error.png", "data/.cache/imgs/notify_error.png"},
-		{"frontend/dist/favicon.ico", "data/.cache/imgs/notify_normal.ico"},
+		{"frontend/dist/favicon.png", "data/.cache/imgs/notify_normal.png"},
 	}
 
 	os.MkdirAll(GetPath("data/.cache/imgs"), os.ModePerm)

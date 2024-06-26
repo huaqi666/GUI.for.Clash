@@ -17,7 +17,7 @@ import (
 //go:embed frontend/dist
 var assets embed.FS
 
-//go:embed frontend/dist/favicon.ico
+//go:embed frontend/dist/favicon.png
 var icon []byte
 
 var isStartup = true
@@ -68,6 +68,7 @@ func main() {
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
 	app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
+		Name:                   "Main",
 		Title:                  bridge.Env.AppName,
 		MinWidth:               600,
 		MinHeight:              400,
@@ -118,7 +119,7 @@ func main() {
 		},
 		ShouldClose: func(window *application.WebviewWindow) bool {
 			appService.Ctx.Events.Emit(&application.WailsEvent{
-				Name: "beforeClose",
+				Name: "onBeforeExitApp",
 			})
 			return true
 		},
