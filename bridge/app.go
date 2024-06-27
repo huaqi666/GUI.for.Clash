@@ -67,8 +67,16 @@ func InitApp() {
 		}
 	}
 
+	if Env.OS == "windows" {
+		Config.BackgroundType = int(application.BackgroundTypeTranslucent)
+	} else {
+		Config.BackgroundType = int(application.BackgroundTypeSolid)
+	}
+
+	Config.Hidden = Env.FromTaskSch && (Config.WindowStartState == int(application.WindowStateMinimised))
+
 	if !Env.FromTaskSch {
-		Config.WindowStartState = 0
+		Config.WindowStartState = int(application.WindowStateNormal)
 	}
 }
 

@@ -66,8 +66,8 @@ func main() {
 		Width:                  bridge.Config.Width,
 		Height:                 bridge.Config.Height,
 		Frameless:              bridge.Env.OS == "windows",
-		Hidden:                 bridge.Env.FromTaskSch && bridge.Config.WindowStartState == 2,
-		BackgroundType:         application.BackgroundTypeTranslucent,
+		Hidden:                 bridge.Config.Hidden,
+		BackgroundType:         application.BackgroundType(bridge.Config.BackgroundType),
 		BackgroundColour:       application.NewRGBA(255, 255, 255, 1),
 		StartState:             application.WindowState(bridge.Config.WindowStartState),
 		Windows: application.WindowsWindow{
