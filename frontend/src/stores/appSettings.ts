@@ -196,7 +196,9 @@ export const useAppSettingsStore = defineStore('app-settings', () => {
   window.addEventListener(
     'resize',
     debounce(async () => {
-      if (!(await Window.IsMaximised())) {
+      const isMinimised = await Window.IsMinimised()
+      const isMaximised = await Window.IsMaximised()
+      if (!isMinimised && !isMaximised) {
         app.value.width = document.documentElement.clientWidth
         app.value.height = document.documentElement.clientHeight
       }
