@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 
 import * as Stores from '@/stores'
-import { Events, Application } from '@/bridge'
+import { Events, Application, IsStartup } from '@/bridge'
 import { exitApp, sampleID, sleep } from '@/utils'
 import { useMessage, usePicker, useConfirm, usePrompt, useAlert } from '@/hooks'
 
@@ -56,15 +56,6 @@ Events.On('launchArgs', async (args: string[]) => {
   }
 })
 
-let startupResolve: (value: unknown) => void
-const startupPromise = new Promise((resolve) => (startupResolve = resolve))
-
-Events.On('onStartup', async () => {
-  console.log('OnStartup')
-  await startupPromise
-  pluginsStore.onStartupTrigger().catch(message.error)
-})
-
 Events.On('onBeforeExitApp', async () => {
   if (appSettings.app.exitOnClose) {
     exitApp()
@@ -85,16 +76,16 @@ appSettings.setupAppSettings().then(async () => {
     scheduledTasksStore.setupScheduledTasks()
   ])
 
-  startupResolve(0)
+  if (await IsStartup()) {
+    console.log('OnStartup')
+    pluginsStore.onStartupTrigger().catch(message.error)
+  }
 
   console.log('OnReady')
-
   pluginsStore.onReadyTrigger().catch(message.error)
 
   await sleep(1000)
-
   loading.value = false
-
   kernelApiStore.updateKernelState()
 })
 </script>

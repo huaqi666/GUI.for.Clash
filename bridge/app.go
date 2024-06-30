@@ -32,6 +32,8 @@ var Env = &EnvResult{
 
 var Config = &AppConfig{}
 
+var isStartup = true
+
 func InitApp() {
 	// step1: Set Env
 	exePath, err := os.Executable()
@@ -108,6 +110,14 @@ func (a *App) GetEnv() EnvResult {
 		ARCH:     Env.ARCH,
 		X64Level: Env.X64Level,
 	}
+}
+
+func (a *App) IsStartup() bool {
+	if isStartup {
+		isStartup = false
+		return true
+	}
+	return false
 }
 
 func (a *App) GetInterfaces() FlagResult {
