@@ -1,7 +1,7 @@
 version: "3"
 
 vars:
-  APP_NAME: "output"
+  APP_NAME: "GUI.for.Clash"
   BIN_DIR: "bin"
   VITE_PORT: "{{.WAILS_VITE_PORT | default 9245}}"
 
@@ -33,7 +33,7 @@ tasks:
         vars:
           ARCH: "{{.ARCH}}"
     cmds:
-      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/output.exe
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}.exe
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -ldflags="-w -s -H windowsgui"{{else}}-gcflags=all="-l"{{end}}'
     env:
@@ -138,7 +138,7 @@ tasks:
         vars:
           ARCH: "{{.ARCH}}"
     cmds:
-      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/output
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -ldflags="-w -s"{{else}}-gcflags=all="-l"{{end}}'
     env:
@@ -381,7 +381,7 @@ tasks:
         vars:
           BUILD_FLAGS: "{{.BUILD_FLAGS}}"
     cmds:
-      - pnpm run build-only
+      - pnpm build
 
   generate:bindings:
     summary: Generates bindings for the frontend
@@ -430,7 +430,7 @@ tasks:
     deps:
       - task: install:frontend:deps
     cmds:
-      - pnpm run dev -- --port {{.VITE_PORT}} --strictPort
+      - pnpm dev
 
   dev:
     summary: Runs the application in development mode
