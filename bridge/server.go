@@ -2,11 +2,9 @@ package bridge
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"reflect"
 	"strings"
 	"time"
 
@@ -53,9 +51,6 @@ func (a *App) StartServer(address string, serverID string) FlagResult {
 			a.Ctx.Events.On(requestID, func(event *application.WailsEvent) {
 				a.Ctx.Events.Off(requestID)
 				resp := ResponseData{200, map[string]string{}, "A sample http server", IOOptions{Mode: Text}}
-
-				dataType := reflect.TypeOf(event.Data)
-				fmt.Println("event.Data type:", dataType)
 
 				if data, ok := event.Data.(map[string]interface{}); ok {
 					if status, ok := data["status"].(float64); ok {
