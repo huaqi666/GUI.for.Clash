@@ -120,6 +120,11 @@ export default {
       'prefer-h3': '是否开启 DOH 的 http/3',
       'enhanced-mode': '增强模式',
       'fake-ip-range': 'Fake-IP 范围',
+      'fake-ip-filter-mode': {
+        name: 'Fake-IP 过滤模式',
+        blacklist: '黑名单',
+        whitelist: '白名单'
+      },
       'fake-ip-filter': 'Fake-IP 过滤',
       'default-nameserver': '默认DNS',
       nameserver: '域名服务器',
@@ -409,6 +414,7 @@ export default {
     rules: '规则'
   },
   ruleset: {
+    manual: '手动管理',
     behavior: {
       name: '匹配行为',
       classical: '经典',
@@ -416,7 +422,11 @@ export default {
       ipcidr: 'IP地址段'
     },
     rulesetType: '规则集类型',
-    format: '格式',
+    format: {
+      name: '文件格式',
+      yaml: 'Yaml',
+      mrs: 'Mrs'
+    },
     name: '名称',
     url: '远程链接',
     path: '保存路径',
@@ -556,7 +566,8 @@ export default {
       name: 'Mihomo',
       version: '切换版本',
       stable: '稳定版',
-      alpha: '内测版'
+      alpha: '内测版',
+      grant: '授予特权'
     },
     userAgent: {
       name: '用户代理(User-Agent)',
@@ -600,6 +611,7 @@ export default {
     later: '后'
   },
   tray: {
+    showMainWindow: '显示主窗口',
     restart: '重启',
     restartTip: '重启程序',
     exit: '退出',

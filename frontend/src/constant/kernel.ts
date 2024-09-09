@@ -230,6 +230,17 @@ export const EnhancedModeOptions = [
   }
 ]
 
+export const FakeipFilterMode = [
+  {
+    label: 'kernel.dns.fake-ip-filter-mode.blacklist',
+    value: 'blacklist'
+  },
+  {
+    label: 'kernel.dns.fake-ip-filter-mode.whitelist',
+    value: 'whitelist'
+  }
+]
+
 export const ProxyTypeOptions = [
   {
     label: 'direct',
@@ -287,19 +298,22 @@ export enum RulesetBehavior {
   Classical = 'classical'
 }
 
+export enum RulesetFormat {
+  Yaml = 'yaml',
+  Mrs = 'mrs'
+}
+
+export const RulesetFormatOptions = [
+  { label: 'ruleset.format.yaml', value: RulesetFormat.Yaml },
+  { label: 'ruleset.format.mrs', value: RulesetFormat.Mrs }
+]
+
 export const RulesetBehaviorOptions = [
   { label: 'ruleset.behavior.classical', value: RulesetBehavior.Classical },
   { label: 'ruleset.behavior.domain', value: RulesetBehavior.Domain },
   { label: 'ruleset.behavior.ipcidr', value: RulesetBehavior.Ipcidr }
 ]
 
-export const RulesetFormatOptions = [
-  {
-    label: 'yaml',
-    value: 'yaml'
-  },
-  {
-    label: 'mrs',
-    value: 'mrs'
-  }
-]
+export const EmptyRuleSet = {
+  payload: []
+}

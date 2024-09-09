@@ -120,6 +120,11 @@ export default {
       'prefer-h3': 'Prefer h3',
       'enhanced-mode': 'Enhanced Mode',
       'fake-ip-range': 'Fake-IP Range',
+      'fake-ip-filter-mode': {
+        name: 'Fake-IP Filter Mode',
+        blacklist: 'Blacklist',
+        whitelist: 'Whitelist'
+      },
       'fake-ip-filter': 'Fake-IP Filter',
       'default-nameserver': 'Default Nameserver',
       nameserver: 'NameServer',
@@ -409,6 +414,7 @@ export default {
     rules: 'Rules'
   },
   ruleset: {
+    manual: 'Manual',
     behavior: {
       name: 'Behavior',
       classical: 'classical',
@@ -416,7 +422,11 @@ export default {
       ipcidr: 'ipcidr'
     },
     rulesetType: 'Ruleset Type',
-    format: 'format',
+    format: {
+      name: 'Format',
+      yaml: 'Yaml',
+      mrs: 'Mrs'
+    },
     name: 'Name',
     url: 'Remote Url',
     path: 'Save Path',
@@ -556,7 +566,8 @@ export default {
       name: 'Mihomo',
       version: 'Switch version',
       stable: 'Stable version',
-      alpha: 'Alpha version'
+      alpha: 'Alpha version',
+      grant: 'Grant Privileges'
     },
     userAgent: {
       name: 'User-Agent',
@@ -600,6 +611,7 @@ export default {
     later: 'Later'
   },
   tray: {
+    showMainWindow: 'Show Main Window',
     restart: 'Restart',
     restartTip: 'Restart App',
     exit: 'Exit',

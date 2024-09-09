@@ -1,20 +1,19 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-import { stringify, parse } from 'yaml'
+import { parse } from 'yaml'
 
-import { Readfile, Writefile, HttpGet, Download } from '@/bridge'
-import { RulesetsFilePath, RulesetBehavior } from '@/constant'
-import { debounce, isValidPaylodYAML, ignoredError, omitArray } from '@/utils'
-import { Copyfile } from '@wails/go/bridge/App'
+import { RulesetsFilePath, RulesetBehavior, RulesetFormat, EmptyRuleSet } from '@/constant'
+import { Copyfile, Readfile, Writefile, HttpGet, Download, FileExists } from '@/bridge'
+import { debounce, isValidPaylodYAML, ignoredError, omitArray, stringifyNoFolding } from '@/utils'
 
 export type RuleSetType = {
   id: string
   name: string
   updateTime: number
   disabled: boolean
-  type: 'Http' | 'File'
+  type: 'Http' | 'File' | 'Manual'
   behavior: RulesetBehavior
-  format: 'yaml' | 'mrs'
+  format: RulesetFormat
   path: string
   url: string
   count: number
@@ -32,7 +31,7 @@ export const useRulesetsStore = defineStore('rulesets', () => {
 
   const saveRulesets = debounce(async () => {
     const r = omitArray(rulesets.value, ['updating'])
-    await Writefile(RulesetsFilePath, stringify(r))
+    await Writefile(RulesetsFilePath, stringifyNoFolding(r))
   }, 500)
 
   const addRuleset = async (r: RuleSetType) => {
@@ -70,38 +69,48 @@ export const useRulesetsStore = defineStore('rulesets', () => {
   }
 
   const _doUpdateRuleset = async (r: RuleSetType) => {
-    if (r.format === 'yaml') {
+    if (r.format === RulesetFormat.Yaml) {
       let body = ''
       let ruleset: any
+      let isExist = true
 
       if (r.type === 'File') {
         body = await Readfile(r.url)
-      }
-
-      if (r.type === 'Http') {
+      } else if (r.type === 'Http') {
         const { body: b } = await HttpGet(r.url)
         body = b
+      } else if (r.type === 'Manual') {
+        isExist = await FileExists(r.path)
+        if (isExist) {
+          body = await Readfile(r.path)
+        } else {
+          body = stringifyNoFolding(EmptyRuleSet)
+        }
       }
 
-      if (isValidPaylodYAML(body)) {
-        const { payload } = parse(body)
-        ruleset = { payload: [...new Set(payload)] }
-      } else {
+      if (!isValidPaylodYAML(body)) {
         throw 'Not a valid ruleset data'
       }
 
-      if (r.type !== 'File') {
-        await Writefile(r.path, stringify(ruleset))
+      const { payload } = parse(body)
+      ruleset = { payload: [...new Set(payload)] }
+
+      if (
+        (['Http', 'File'].includes(r.type) && r.url !== r.path) ||
+        (r.type === 'Manual' && !isExist)
+      ) {
+        await Writefile(r.path, stringifyNoFolding(ruleset))
       }
 
       r.count = ruleset.payload.length
     }
 
-    if (r.format === 'mrs') {
-      await {
-        File: Copyfile,
-        Http: Download
-      }[r.type](r.url, r.path)
+    if (r.format === RulesetFormat.Mrs) {
+      if (r.type === 'File' && r.url !== r.path) {
+        await Copyfile(r.url, r.path)
+      } else if (r.type === 'Http') {
+        await Download(r.url, r.path)
+      }
     }
 
     r.updateTime = Date.now()

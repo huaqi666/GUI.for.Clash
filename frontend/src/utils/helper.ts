@@ -1,8 +1,8 @@
-import { parse, stringify } from 'yaml'
+import { parse } from 'yaml'
 
 import { ProxyGroupType } from '@/constant'
 import { useConfirm, useMessage } from '@/hooks'
-import { ignoredError, APP_TITLE } from '@/utils'
+import { ignoredError, APP_TITLE, stringifyNoFolding } from '@/utils'
 import { deleteConnection, getConnections, useProxy } from '@/api/kernel'
 import { AbsolutePath, Exec, ExitApp, Readfile, Writefile } from '@/bridge'
 import { useAppSettingsStore, useEnvStore, useKernelApiStore, usePluginsStore } from '@/stores'
@@ -30,6 +30,22 @@ export const SwitchPermissions = async (enable: boolean) => {
         '/f'
       ]
   await Exec('reg', args, { convert: true })
+}
+
+export const GrantTUNPermission = async (path: string) => {
+  const { os } = useEnvStore().env
+  const absPath = await AbsolutePath(path)
+  if (os === 'darwin') {
+    const osaScript = `chown root:admin ${absPath}\nchmod +sx ${absPath}`
+    const bashScript = `osascript -e 'do shell script "${osaScript}" with administrator privileges'`
+    await Exec('bash', ['-c', bashScript])
+  } else if (os === 'linux') {
+    await Exec('pkexec', [
+      'setcap',
+      'cap_net_bind_service,cap_net_admin,cap_dac_override=+ep',
+      absPath
+    ])
+  }
 }
 
 export const CheckPermissions = async () => {
@@ -376,7 +392,7 @@ export const addToRuleSet = async (ruleset: 'direct' | 'reject' | 'proxy', paylo
   const content = (await ignoredError(Readfile, path)) || '{}'
   const { payload = [] } = parse(content)
   payload.unshift(...payloads)
-  await Writefile(path, stringify({ payload: [...new Set(payload)] }))
+  await Writefile(path, stringifyNoFolding({ payload: [...new Set(payload)] }))
 }
 
 export const exitApp = async () => {

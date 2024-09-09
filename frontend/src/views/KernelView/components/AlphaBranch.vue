@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { computed, ref } from 'vue'
 
 import { useMessage } from '@/hooks'
-import { getGitHubApiAuthorization, ignoredError } from '@/utils'
+import { GrantTUNPermission, getGitHubApiAuthorization, ignoredError } from '@/utils'
 import { KernelWorkDirectory, getKernelFileName } from '@/constant'
 import { useAppSettingsStore, useEnvStore, useKernelApiStore } from '@/stores'
 import {
@@ -41,6 +41,7 @@ const needUpdate = computed(() => remoteVersion.value && localVersion.value !== 
 
 const { t } = useI18n()
 const { message } = useMessage()
+const envStore = useEnvStore()
 const appSettings = useAppSettingsStore()
 const kernelApiStore = useKernelApiStore()
 
@@ -63,7 +64,6 @@ const downloadCore = async () => {
     const { assets, message: msg } = body
     if (msg) throw msg
 
-    const envStore = useEnvStore()
     const amd64Compatible = arch === 'amd64' && envStore.env.x64Level < 3 ? '-compatible' : ''
     const suffix = { windows: '.zip', linux: '.gz', darwin: '.gz' }[os]
     const assetName = `mihomo-${os}-${arch}${amd64Compatible}-${remoteVersion.value}${suffix}`
@@ -170,6 +170,13 @@ const handleRestartKernel = async () => {
   }
 }
 
+const handleGrantPermission = async () => {
+  const fileName = await getKernelFileName(true)
+  const kernelFilePath = KernelWorkDirectory + '/' + fileName
+  await GrantTUNPermission(kernelFilePath)
+  message.success('common.success')
+}
+
 const initVersion = async () => {
   getLocalVersion()
     .then((v) => {
@@ -194,6 +201,14 @@ initVersion()
 <template>
   <h3>
     Alpha
+    <Button
+      @click="handleGrantPermission"
+      v-if="localVersion && envStore.env.os !== 'windows'"
+      v-tips="'settings.kernel.grant'"
+      type="text"
+      size="small"
+      icon="grant"
+    />
     <Button
       @click="BrowserOpenURL('https://github.com/MetaCubeX/mihomo/releases/tag/Prerelease-Alpha')"
       icon="link"
